@@ -21,6 +21,11 @@ app.use("/movie", movieRoutes);
 app.use("/auth", authRoutes);
 app.use("/watchlist", watchListRoutes);
 
+app.get("/test", (req, res) => {
+  console.log("hitting.........");
+  res.send("hhiii");
+});
+
 const server = app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);
 });
