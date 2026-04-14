@@ -1,4 +1,7 @@
 import { config } from "dotenv";
+import cluster from "cluster";
+import { cpus } from "node:os";
+import process from "node:process";
 import express from "express";
 import { prisma, connectDB, disconnectDB } from "./config/db.js";
 
@@ -13,6 +16,12 @@ connectDB();
 const app = express();
 
 const PORT = 8002;
+// node clustering code
+if (cluster.isPrimary) {
+  //
+} else {
+  //
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
