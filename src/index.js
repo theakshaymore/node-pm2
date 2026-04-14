@@ -9,30 +9,40 @@ import { prisma, connectDB, disconnectDB } from "./config/db.js";
 import movieRoutes from "./routes/movies.route.js";
 import authRoutes from "./routes/auth.route.js";
 import watchListRoutes from "./routes/watchlist.route.js";
+// import { worker } from "node:cluster";
 
 config();
-connectDB();
-
-const app = express();
 
 const PORT = 8002;
 // node clustering code
 if (cluster.isPrimary) {
-  //
-} else {
-  //
-}
+  // PRIMARY PROCESS
+  const numCPUs = 4; //as per requirement
+  console.log(
+    `Primary ${process.pid} is running. Forking ${numCPUs} workers...`,
+  );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  // If a worker dies, spawn a new one to maintain 4 workers
+  cluster.on("exit", (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died. Spawning replacement...`);
+    cluster.fork();
+  });
+} else {
+  // WORKER PROCESS
+  const app = express();
+  connectDB();
+
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+}
 
 app.use("/movie", movieRoutes);
 app.use("/auth", authRoutes);
 app.use("/watchlist", watchListRoutes);
-
-const server = app.listen(PORT, () => {
-  console.log(`Server is running at port ${PORT}`);
-});
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {
